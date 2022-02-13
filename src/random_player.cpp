@@ -4,7 +4,7 @@
 #include <charconv>
 #include <thread>
 
-auto get_game_master_respone(const std::string& path, const std::string& last_input) noexcept -> std::string {
+auto get_game_master_respone(const std::string& path) noexcept -> std::string {
     std::ifstream file_handle;
     std::string file_contents;
     do {
@@ -35,14 +35,13 @@ int main(int argc, char* argv[]) {
     }
     const char* player = argv[1];
     std::string file = std::string(argv[2]);
-    std::string last_input;
 
     std::vector<unsigned char> field(16, 0);
     std::size_t number;
     srand(time(nullptr));
 
     while (true) {
-        auto input = get_game_master_respone(file, last_input);
+        auto input = get_game_master_respone(file);
         trunc_file(file);
 
         if (input == "end") {
@@ -66,7 +65,6 @@ int main(int argc, char* argv[]) {
 
         field[index] = field[index] + 1;
         write_response(file, index);
-        last_input = std::to_string(index);
         std::this_thread::sleep_for(1s);
     }
 
