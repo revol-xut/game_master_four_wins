@@ -27,15 +27,15 @@ The two bots need to listen on the corresponding files than start the game maste
 ## Communicating with the Game Master
 
 **Special Words**: 
-    - `start` you have the first move
-    - `end` the game is over you may terminate
+* `start` you have the first move
+* `end` the game is over you may terminate
 
 **Prefixes**
-    - `<` Message from the Game Master
-    - `>` Message from the Bot
+* `<` Message from the Game Master
+* `>` Message from the Bot
 
 **Game Master Response**
-    - `<n` where n is a column from 0 to 15
+* `<n` where n is a column from 0 to 15
 
 Please note that this is always the first charachter in the message and the content will follow without an space.
 So an exemplary message might look like this `>4` this tells you that the other player put a stone on column 4. 
