@@ -19,10 +19,10 @@ auto random_string(std::size_t length) -> std::string {
     std::uniform_int_distribution<> distribution(0, CHARACTERS.size() - 1);
 
     std::string random_string;
-
+    srand(time(nullptr));
     for (std::size_t i = 0; i < length; ++i)
     {
-        random_string += CHARACTERS[distribution(generator)];
+        random_string += CHARACTERS[rand() % CHARACTERS.size()]; // CHARACTERS[distribution(generator)];
     }
 
     return random_string;
@@ -54,50 +54,15 @@ void Game::write_bot_response(const std::string& path, const std::string& value)
 }
 
 Game::Game() noexcept {
-    auto connect = [](sio::event& e){
-        auto m = e.get_message()->get_map();
+    using namespace std::chrono_literals;
 
-        std::cout << "connect" << std::endl;
-        std::for_each(m.begin(),
-                m.end(),
-                [](const std::pair<std::string, sio::message::ptr> &p) {
-                    std::cout << "{" << p.first << ": " << "}\n";
-                });
-    };
+    auto connect = [](sio::event& e){};
 
-    auto disconnect = [](sio::event& e){
-        auto m = e.get_message()->get_map();
+    auto disconnect = [](sio::event& e){};
 
-        std::cout << "disconnect" << std::endl;
-        std::for_each(m.begin(),
-                      m.end(),
-                      [](const std::pair<std::string, sio::message::ptr> &p) {
-                          std::cout << "{" << p.first << ": " << "}\n";
-                      });
+    auto setup = [](sio::event& e){};
 
-    };
-
-    auto setup = [](sio::event& e){
-        auto m = e.get_message()->get_map();
-
-        std::cout << "setup" << std::endl;
-        std::for_each(m.begin(),
-                      m.end(),
-                      [](const std::pair<std::string, sio::message::ptr> &p) {
-                          std::cout << "{" << p.first << ": " << "}\n";
-                      });
-    };
-
-    auto state_update = [](sio::event& e){
-        auto m = e.get_message()->get_map();
-
-        std::cout << "state_update" << std::endl;
-        std::for_each(m.begin(),
-                      m.end(),
-                      [](const std::pair<std::string, sio::message::ptr> &p) {
-                          std::cout << "{" << p.first << ": " << "}\n";
-                      });
-    };
+    auto state_update = [](sio::event& e){};
 
     client_black_.socket()->on("connect", connect);
     client_white_.socket()->on("connect", connect);
@@ -112,16 +77,18 @@ Game::Game() noexcept {
     client_white_.socket()->on("state_update", state_update);
 
     client_black_.connect(kAddress);
+    std::this_thread::sleep_for(0.25s);
     client_white_.connect(kAddress);
     session_id_ = random_string(12);
-
     sio::message::ptr m = sio::object_message::create();
     m->get_map()["sessionId"] = sio::string_message::create(session_id_);
-    //m->insert("sessionId", session_id_);
     sio::message::list li{m};
 
+    std::this_thread::sleep_for(0.5s);
     client_black_.socket()->emit("setup", li);
+    std::this_thread::sleep_for(0.25s);
     client_white_.socket()->emit("setup", li);
+    std::this_thread::sleep_for(0.5s);
 }
 
 void Game::mainloop() noexcept {
@@ -130,11 +97,16 @@ void Game::mainloop() noexcept {
     const std::string player_2_file = "./white";
     std::string file;
 
+    std::cout << "http://0.0.0.0:8080/#" << session_id_ << std::endl;
+    std::string user_input;
+    std::getline(std::cin, user_input);
+
     write_bot_response(player_1_file, "start");
     while (not board_.is_finished()) {
         auto current_player = board_.get_game_turn();
         file = not current_player ? player_1_file : player_2_file;
 
+        std::cout << "Waiting for Player: " << file << std::endl;
         auto start_point = std::chrono::steady_clock::now();
         auto value = get_bot_respone(file);
         auto end_point = std::chrono::steady_clock::now();
@@ -151,8 +123,9 @@ void Game::mainloop() noexcept {
         auto column = static_cast<unsigned char>(value);
 
         std::cout << "Player: " << current_player << " Column: " << std::to_string(column) << std::endl;
+
+        write_to_website(current_player ? GamePosition::Black : GamePosition::White , column);
         board_.player_move(column);
-        board_.write_data("live_feed.csv");
 
         if(board_.is_finished()) {
             write_bot_response(player_1_file, "end");
@@ -178,6 +151,7 @@ void Game::mainloop() noexcept {
     }
     trunc_file(player_1_file);
     trunc_file(player_2_file);
+    std::this_thread::sleep_for(1s);
 }
 
 void Game::trunc_file(const std::string &path) noexcept {

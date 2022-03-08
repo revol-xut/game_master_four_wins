@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
         field[index] = field[index] + 1;
         write_response(file, index);
         last_input = std::to_string(index);
-        std::this_thread::sleep_for(1s);
+        std::this_thread::sleep_for(10s);
     }
 
     return 0;

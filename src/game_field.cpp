@@ -184,6 +184,40 @@ auto GameField::is_player_winning(GamePosition player) noexcept -> bool {
         return true;
     };
 
+    auto diagonals_1 = [this] (std::size_t z, GamePosition player) {
+        for (auto i = 0; i < 4; i++){
+            if(data_[5 * i][z] != player){
+                return false;
+            }
+        }
+
+        winning_line_ = WinningLine{
+                Point{0, 0, z},
+                Point{1, 1, z},
+                Point{2, 2, z},
+                Point{3, 3, z},
+        };
+
+        return true;
+    };
+
+    auto diagonals_2 = [this] (std::size_t z, GamePosition player) {
+        for (auto i = 0; i < 4; i++){
+            if(data_[3 * (i + 1)][z] != player){
+                return false;
+            }
+        }
+
+        winning_line_ = WinningLine{
+                Point{0, 1, z},
+                Point{1, 2, z},
+                Point{2, 3, z},
+                Point{3, 4, z},
+        };
+
+        return true;
+    };
+
     auto check_diagonal_through_cube = [this](GamePosition player) {
         std::size_t i1 = 0, i2 = 0, i3 = 0, i4 = 0;
 
@@ -294,6 +328,20 @@ auto GameField::is_player_winning(GamePosition player) noexcept -> bool {
     // checking for diagonals in the y direction from high to low
     for (auto i = 0; i < 4; i++){
         if(check_diagonal_y_h_to_l(i, player)){
+            return true;
+        }
+    }
+
+    // checking for diagonals with variables 4
+    for (auto i = 0; i < 4; i++){
+        if(diagonals_1(i, player)){
+            return true;
+        }
+    }
+
+    // checking for diagonals with variables 4
+    for (auto i = 0; i < 4; i++){
+        if(diagonals_2(i, player)){
             return true;
         }
     }
